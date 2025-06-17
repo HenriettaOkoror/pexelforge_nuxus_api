@@ -1,8 +1,9 @@
 from rest_framework import viewsets, permissions
 from .models import Project, Assignment, Document, User
+from django.utils import timezone
 from .serializers import (
     ProjectSerializer, AssignmentSerializer, DocumentSerializer, 
-    CustomTokenObtainPairSerializer, UserViewSetSerializer,
+    CustomTokenObtainPairSerializer, UserViewSetSerializer, DocumentCreateSerializer
     )
 from rest_framework_simplejwt.views import TokenObtainPairView
 
@@ -48,5 +49,13 @@ class DocumentViewSet(viewsets.ModelViewSet):
     queryset = Document.objects.all()
     serializer_class = DocumentSerializer
 
+    def get_serializer(self, *args, **kwargs):
+        if self.request.method == 'POST':
+            return DocumentCreateSerializer(*args, **kwargs)
+        return super().get_serializer(*args, **kwargs)
+
     def perform_create(self, serializer):
-        serializer.save(uploaded_by=self.request.user)
+        serializer.save(
+            uploaded_by=self.request.user,
+            uploaded_at=timezone.now()
+        )

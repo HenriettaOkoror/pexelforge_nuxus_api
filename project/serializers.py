@@ -69,3 +69,14 @@ class DocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Document
         fields = '__all__'
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['project_name'] = instance.project.name
+        return data
+
+
+class DocumentCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Document
+        exclude = ('uploaded_by', 'uploaded_at')
