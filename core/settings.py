@@ -44,7 +44,14 @@ INSTALLED_APPS = [
     'project',
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'drf_spectacular',
+    'django_otp',
+    'django_otp.plugins.otp_totp',
+    'two_factor',
+    'two_factor.plugins.phonenumber',
+    'two_factor.plugins.email',
+    'phonenumbers'
 ]
 
 MIDDLEWARE = [
@@ -56,6 +63,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_otp.middleware.OTPMiddleware',
 ]
 
 AUTH_USER_MODEL = 'project.User'
@@ -72,10 +80,11 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
+    'BLACKLIST_AFTER_ROTATION': True,
+    'ROTATE_REFRESH_TOKENS': True,
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=720),   # Set to 1 day (adjust as needed)
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),       # Refresh token valid for 7 days
-    "ROTATE_REFRESH_TOKENS": False,
-    "BLACKLIST_AFTER_ROTATION": False,
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 

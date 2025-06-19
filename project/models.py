@@ -7,11 +7,14 @@ class User(AbstractUser):
         ('lead', 'Project Lead'),
         ('dev', 'Developer'),
     ]
+    mfa_secret = models.CharField(null=True, blank=True)
+    is_mfa_enabled = models.BooleanField(default=False)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES)
 
 class Project(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
+    start_date = models.DateField(null=True, blank=True)
     deadline = models.DateField()
     is_completed = models.BooleanField(default=False)
 
@@ -21,6 +24,7 @@ class Project(models.Model):
 class Assignment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
+
 
 class Document(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
