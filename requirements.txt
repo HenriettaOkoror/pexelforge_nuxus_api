@@ -16,11 +16,14 @@ jsonschema==4.24.0
 jsonschema-specifications==2025.4.1
 phonenumbers==9.0.7
 pillow==11.2.1
+psycopg2-binary
 PyJWT==2.9.0
 pyotp==2.9.0
 pypng==0.20220715.0
+python-decouple
 PyYAML==6.0.2
 qrcode==7.4.2
+redis
 referencing==0.36.2
 rpds-py==0.25.1
 sqlparse==0.5.3

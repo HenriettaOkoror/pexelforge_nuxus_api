@@ -27,7 +27,11 @@ class Assignment(models.Model):
 
 
 class Document(models.Model):
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    projects = models.ManyToManyField(Project, related_name='documents')
     uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
     file = models.FileField(upload_to='documents/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
+
+
+    def file_name(self):
+        return self.file.name.split('/')[-1]

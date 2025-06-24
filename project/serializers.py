@@ -55,6 +55,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         # If MFA is enabled, verify code
         if user.is_mfa_enabled:
+            totp = pyotp.TOTP(user.mfa_secret)
+            print("Expected code:", totp.now())
             mfa_code = attrs.get("mfa_code")
             if not mfa_code:
                 raise serializers.ValidationError({"detail": "MFA code required."})
@@ -105,17 +107,45 @@ class AssignmentCreateSerializer(serializers.Serializer):
     
 
 class DocumentSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Document
-        fields = '__all__'
+        fields = ('id', 'file', 'uploaded_by', 'uploaded_at','projects')
+
         
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['project_name'] = instance.project.name
+        data['projects'] = [{'name': instance.name, 'id': instance.id} for instance in instance.projects.all()]
         return data
 
 
 class DocumentCreateSerializer(serializers.ModelSerializer):
+    projects = serializers.ListField(child=serializers.IntegerField())
     class Meta:
         model = Document
-        exclude = ('uploaded_by', 'uploaded_at')
+        exclude = ('uploaded_by', 'uploaded_at', 'project')
+        write_only_fields = ('projects',)
+
+
+    def create(self, validated_data):
+        projects = validated_data.pop('projects', None)
+        documents = []
+        for project_id in projects:
+            validated_data['project'] = Project.objects.get(id=project_id)
+            validated_data['uploaded_by'] = self.context['request'].user
+            document = super().create(validated_data.copy())  # use copy to avoid mutation issues
+            documents.append(document)
+        return documents   
+    
+    def update(self, instance, validated_data):
+        projects = validated_data.pop('projects', None)
+        if projects:
+            for project_id in projects:
+                Document.objects.create(
+                    file=instance.file,
+                    uploaded_by=instance.uploaded_by,
+                    project=Project.objects.get(id=project_id)
+                )
+                instance.project = Project.objects.get(id=project_id)
+                instance.save()
+        return instance

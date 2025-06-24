@@ -45,6 +45,16 @@ class ChangePasswordView(APIView):
 
         if not user.check_password(old_password):
             return Response({"detail": "Old password is incorrect."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # If MFA is enabled, verify code
+        if user.is_mfa_enabled:
+            mfa_code = request.data.get('mfa_code')
+            if not mfa_code:
+                return Response({"detail": "MFA code required."}, status=status.HTTP_400_BAD_REQUEST)
+
+            totp = pyotp.TOTP(user.mfa_secret)
+            if not totp.verify(mfa_code, valid_window=1):
+                return Response({"detail": "Invalid MFA code."}, status=status.HTTP_400_BAD_REQUEST)
 
         user.set_password(new_password)
         user.save()
@@ -82,6 +92,7 @@ class MFASetupView(APIView):
         user = request.user
         totp = pyotp.TOTP(pyotp.random_base32())
         user.mfa_secret = totp.secret
+        user.is_mfa_enabled = True
         user.save()
 
         otp_auth_url = totp.provisioning_uri(name=user.email, issuer_name="pixel_forge")
